@@ -1,0 +1,45 @@
+---
+  0 debug pnpm:scope: 
+    selected: 1
+    workspacePrefix: null
+  1 info pnpm: 
+    message: "A store server is running. All store manipulations are delegated to it."
+    prefix: "/app"
+  2 debug pnpm:package-json: 
+    initial: 
+      name: "fpvdrones"
+      version: "0.0.1-beta"
+      description: "A simple FPS project"
+      main: "server.js"
+      scripts: 
+        start: "node server.js"
+      dependencies: 
+        express: "^4.21.1"
+        socket.io: "^4.8.1"
+      engines: 
+        node: "12.x"
+      license: "MIT"
+      keywords: 
+        - "node"
+        - "glitch"
+        - "express"
+        - "fps"
+      gitHead: "4f5e03bcda3dc395b2566dfcd9353d70cd276b12"
+      readme: "ERROR: No README data found!"
+      _id: "fpvdrones@0.0.1-beta"
+    prefix: "/app"
+  3 warn pnpm: 
+    message: "Moving express that was installed by a different package manager to \"node_modules/.ignored"
+    prefix: "/app"
+  4 error pnpm: 
+    message: 
+      errno: -39
+      code: "ENOTEMPTY"
+      syscall: "rename"
+      path: "/rbd/pnpm-volume/f87d1cf7-5caa-44d7-8431-f33363b3a93e/node_modules/express"
+      dest: "/rbd/pnpm-volume/f87d1cf7-5caa-44d7-8431-f33363b3a93e/node_modules/.ignored/express"
+    err: 
+      name: "Error"
+      message: "ENOTEMPTY: directory not empty, rename '/rbd/pnpm-volume/f87d1cf7-5caa-44d7-8431-f33363b3a93e/node_modules/express' -> '/rbd/pnpm-volume/f87d1cf7-5caa-44d7-8431-f33363b3a93e/node_modules/.ignored/express'"
+      code: "ENOTEMPTY"
+      stack: "Error: ENOTEMPTY: directory not empty, rename '/rbd/pnpm-volume/f87d1cf7-5caa-44d7-8431-f33363b3a93e/node_modules/express' -> '/rbd/pnpm-volume/f87d1cf7-5caa-44d7-8431-f33363b3a93e/node_modules/.ignored/express'"
