@@ -95,8 +95,10 @@ class InputAxis {
     this.gpIndex = -1;
     
     this.deadZone = 0.15;
-    this.linearity = 0;
+    this.linearity = 0.2;
     Object.assign(this, params);
+    
+    this.filter=this.cubicFilter
     
     this.update();
   }
@@ -124,9 +126,13 @@ class InputAxis {
     return this.filter(dz);
   }
   
-  filter(x) {
+  cubicFilter(x) {
     let w = 1-this.linearity;
     return w*x*x*x + x*(1-w);
+  }
+  
+  throttleFilter (x) {
+    return this.cubicFilter(-x)/2 + 0.5
   }
 }
   
