@@ -24,7 +24,7 @@
         - "glitch"
         - "express"
         - "fps"
-      gitHead: "976968a57a79f21a602767ff15c4bc2fe3ba2121"
+      gitHead: "06c0c71dd49e3eeb667a1b80645e65a35f3635ea"
       readme: "ERROR: No README data found!"
       _id: "fpvdrones@0.0.1-beta"
     prefix: "/app"

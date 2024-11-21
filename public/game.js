@@ -1,6 +1,7 @@
 import { Quaternion,
          Vector3,
-         MathUtils
+         MathUtils,
+         Raycaster
        } from "three";
 import { InputAxis } from "./engine.js";
 
@@ -60,10 +61,18 @@ class FPVController {
       )
     );
     
-    this.vel.add(this.up.clone().multiplyScalar(this.throttle.filtered / this.mass * dt * 1.80))
+    let force = new Vector3();
+    force.add(this.up.clone().multiplyScalar(this.throttle.filtered * 1.8));
+    let l = this.vel.length()
+    force.sub(this.vel.clone().multiplyScalar(l*l * this.mass*this.mass * 0.05));
     
-    this.vel.add(new Vector3(0,-12,0).multiplyScalar(dt));
-    this.vel.multiplyScalar(0.985);
+    let acc = new Vector3(0,-12,0);
+    acc.add(force.multiplyScalar(1 / this.mass));
+    
+    // this.vel.add(this.up.clone().multiplyScalar(this.throttle.filtered / this.mass * dt * 1.80))
+    
+    this.vel.add(acc.multiplyScalar(dt));
+    // this.vel.sub( this.vel.clone().multiplyScalar(0.985));
     this.pos.add(this.vel.clone().multiplyScalar(dt));
     
     e.camera.position.set(this.pos.x, this.pos.y, this.pos.z);

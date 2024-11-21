@@ -12,10 +12,16 @@ class Engine {
     
     // this.testScene();
     
+    this.enabled = false;
   }
   
   _update () {
+    if(!this.enabled)
+      return;
     let deltaTime = performance.now() - this._lastUpdate;
+    
+    if(deltaTime > 500)
+      deltaTime = 1/60;
     
     for(let f of this.updateFuncs) {
       f(this, deltaTime / 1000);
