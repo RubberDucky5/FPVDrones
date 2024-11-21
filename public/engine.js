@@ -7,6 +7,7 @@ class Engine {
     this.setup();
     
     this._lastUpdate = performance.now(); // Can cause weird things with long load times
+    this._ignoreDeltaTime = true;
     this.renderer.setAnimationLoop(this._update.bind(this));
     
     this.updateFuncs = [];
@@ -14,17 +15,26 @@ class Engine {
     // this.testScene();
     
     this.enabled = false;
+    this.focused = true;
     
     this.octree = new Octree();
+    
+    window.addEventListener("blur", this._blur.bind(this));
+    window.addEventListener("focus", this._focus.bind(this));
   }
   
   _update () {
+    if(!this.focused)
+      return;
+    
     if(!this.enabled)
       return;
     let deltaTime = performance.now() - this._lastUpdate;
     
-    if(deltaTime > 500)
-      deltaTime = 1/60;
+    if(this._ignoreDeltaTime) {
+      deltaTime = 1;
+      this._ignoreDeltaTime = false;
+    }
     
     for(let f of this.updateFuncs) {
       f(this, deltaTime / 1000);
@@ -40,6 +50,15 @@ class Engine {
       this.camera.aspect = window.innerWidth / window.innerHeight;
       this.camera.updateProjectionMatrix();
     }
+  }
+  
+  _blur(e) {
+    this.focused = false;
+    this._ignoreDeltaTime = true;
+  }
+  
+  _focus(e) {
+    this.focused = true;
   }
   
   setup () {
