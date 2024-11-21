@@ -1,62 +1,191 @@
 import * as THREE from "three";
 
-// const scene = new THREE.Scene();
-// const camera = new THREE.PerspectiveCamera( 75, window.innerWidth / window.innerHeight, 0.1, 1000 );
-
-// const renderer = new THREE.WebGLRenderer();
-// renderer.setSize( window.innerWidth, window.innerHeight );
-// document.body.appendChild( renderer.domElement );
-
-// const geometry = new THREE.BoxGeometry( 1, 1, 1 );
-// const material = new THREE.MeshBasicMaterial( { color: 0x00ff00 } );
-// const cube = new THREE.Mesh( geometry, material );
-// scene.add( cube );
-
-// camera.position.z = 5;
-
-// function animate() {
-// 	renderer.render( scene, camera );
-
-//   cube.rotation.x += 0.1;
-//   cube.rotation.y += 0.07;
-// }
-// renderer.setAnimationLoop( animate );
 
 class Engine {
   constructor() {
-    this.testScene();
+    this.setup();
+    
+    this._lastUpdate = performance.now(); // Can cause weird things with long load times
+    this.renderer.setAnimationLoop(this._update.bind(this));
+    
+    this.updateFuncs = [];
+    
+    // this.testScene();
+    
   }
-
-  testScene() {
-    let scene = new THREE.Scene();
-    let camera = new THREE.PerspectiveCamera(
+  
+  _update () {
+    let deltaTime = performance.now() - this._lastUpdate;
+    
+    for(let f of this.updateFuncs) {
+      f(this, deltaTime / 1000);
+    }
+    
+    this.renderer.render(this.scene, this.camera);
+    this._lastUpdate = performance.now();
+  }
+  
+  resize (e) {
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    if (this.camera instanceof THREE.PerspectiveCamera) {
+      this.camera.aspect = window.innerWidth / window.innerHeight;
+      this.camera.updateProjectionMatrix();
+    }
+  }
+  
+  setup () {
+    this.scene = new THREE.Scene();
+    this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
       0.1,
       1000
     );
 
-    let renderer = new THREE.WebGLRenderer();
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    document.body.appendChild(renderer.domElement);
+    this.renderer = new THREE.WebGLRenderer();
+    this.renderer.setSize(window.innerWidth, window.innerHeight);
+    document.body.appendChild(this.renderer.domElement);
+    
+    window.addEventListener("resize", this.resize.bind(this));
+  }
+  
+  // Meant to be call in conjunction with setup
+  destroy () {
+    document.body.removeChild(this.renderer.domElement);
+    
+    // Might want to add removing the resize listener
+  }
+  
+  mouseCaptureOn () {
+    document.addEventListener("mousedown", this._mouseCapture);
+  }
+  
+  mouseCaptureOff () {
+    document.removeEventListener("mousedown", this._mouseCapture);
+  }
+  
+  _mouseCapture (e) {
+    if (document.pointerLockElement === null) {
+      document.body.requestPointerLock();
+    }
+  }
 
+  testScene() {
     let geometry = new THREE.BoxGeometry(1, 1, 1);
     let material = new THREE.MeshBasicMaterial({ color: 0x00ff00 });
     let cube = new THREE.Mesh(geometry, material);
-    scene.add(cube);
+    this.scene.add(cube);
 
-    camera.position.z = 5;
+    this.camera.position.z = 5;
     
-    camera.position.z = 5;
+    this.camera.position.z = 5;
 
-    let animate = () => {
-      renderer.render( scene, camera );
-
-      cube.rotation.x += 0.1;
-      cube.rotation.y += 0.07;
+    let animate = (e, dt) => {
+      cube.rotation.x += 0.1*dt*60;
+      cube.rotation.y += 0.07*dt*60;
     }
-    renderer.setAnimationLoop( animate );
+    this.updateFuncs.push( animate );
   }
 }
 
-export { Engine };
+class InputAxis {
+  constructor  (params) {
+    this.nKey = 0;
+    this.pKey = 0;
+    this.gpIndex = -1;
+    
+    this.deadZone = 0.15;
+    this.linearity = 0;
+    Object.assign(this, params);
+    
+    this.update();
+  }
+  
+  update() {
+    if(this.gpIndex >= 0){
+      this.gpAxis = new GamepadAxis(this.gpIndex);
+    } else this.gpAxis = new Axis();
+    
+    if(this.nKey > 0 && this.pKey > 0) {
+      this.keyAxis = new KeyAxis(this.nKey, this.pKey);
+    } else this.keyAxis = new Axis();
+  }
+  
+  get raw () {
+    if(Math.abs(this.gpAxis.axis) < Math.abs(this.keyAxis.axis))
+      return this.keyAxis.axis;
+    
+    return this.gpAxis.axis;
+  }
+  
+  get filtered () {
+    let dz = Math.abs(this.raw) > this.deadZone ? this.raw : 0;
+    
+    return this.filter(dz);
+  }
+  
+  filter(x) {
+    let w = 1-this.linearity;
+    return w*x*x*x + x*(1-w);
+  }
+}
+  
+class Axis {
+  constructor () {
+    
+  }
+  
+  get axis () {
+    return 0;
+  }
+}
+
+class GamepadAxis {
+  constructor (index=0) {
+    this.index = index;
+    this.gamepad = 0;
+  }
+  
+  get axis () {
+    let gp = navigator.getGamepads()[this.gamepad];
+    
+    if(gp == null){
+      return 0;
+    }else {
+      return gp.axes[this.index];
+    }
+  }
+}
+
+class KeyAxis {
+  constructor(n,p) {
+    this.nk = n;
+    this.pk = p;
+    
+    this.nw = 0;
+    this.pw = 0;
+
+    
+    window.addEventListener("keydown", this.onKeyDown.bind(this));
+    window.addEventListener("keyup", this.onKeyUp.bind(this));
+  }
+  
+  get axis () {
+    return -1 * this.nw + this.pw;
+  }
+  
+  onKeyDown (e) {
+    if(e.keyCode == this.nk)
+      this.nw = 1;
+    if(e.keyCode == this.pk)
+      this.pw = 1;
+  }
+  onKeyUp (e) {
+    if(e.keyCode == this.nk)
+      this.nw = 0;
+    if(e.keyCode == this.pk)
+      this.pw = 0;
+  }
+}
+
+export { Engine, GamepadAxis, KeyAxis, InputAxis, Axis };
