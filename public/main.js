@@ -28,6 +28,7 @@ loader.load("test.gltf", (gltf) => {
   let scene = gltf.scene;
 
   engine.scene.add(scene);
+  engine.octree.fromGraphNode(scene);
 
   engine.enabled=true;
 });

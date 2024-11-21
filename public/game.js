@@ -4,6 +4,7 @@ import { Quaternion,
          Raycaster
        } from "three";
 import { InputAxis } from "./engine.js";
+import {Capsule} from "./static/capsule.js";
 
 class FPVController {
   constructor(engine) {
@@ -24,6 +25,12 @@ class FPVController {
     this.forward = new Vector3(0,0,1);
     
     this.camAngle = 40;
+    
+    this.collider = new Capsule(
+      new Vector3(0, 0, 0),
+      new Vector3(0, 0, 0),
+      0.25
+    );
     
     engine.updateFuncs.push(this.update.bind(this));
   }
@@ -61,6 +68,8 @@ class FPVController {
       )
     );
     
+    let ppos = this.pos.clone();
+    
     let force = new Vector3();
     force.add(this.up.clone().multiplyScalar(this.throttle.filtered * 1.8));
     let l = this.vel.length()
@@ -73,9 +82,9 @@ class FPVController {
     
     this.vel.add(acc.multiplyScalar(dt));
     // this.vel.sub( this.vel.clone().multiplyScalar(0.985));
-    this.pos.add(this.vel.clone().multiplyScalar(dt));
+    this.collider.translate(this.vel.clone().multiplyScalar(dt));
     
-    e.camera.position.set(this.pos.x, this.pos.y, this.pos.z);
+    e.camera.position.set(this.collider.end.x, this.collider.end.y, this.collider.end.z);
     e.camera.up = this.up;
     e.camera.lookAt(e.camera.position.clone().add(this.forward));
     e.camera.applyQuaternion(new Quaternion().setFromAxisAngle(
@@ -83,9 +92,21 @@ class FPVController {
         -MathUtils.degToRad(this.camAngle)
       ))
     
+    this.collision(e);
+    
     
     e.camera.updateWorldMatrix();
   }
+  
+  collision(e) {
+    let result = e.octree.capsuleIntersect(this.collider);
+    
+    if(result){
+      this.vel.addScaledVector(result.normal, -result.normal.dot(this.vel) * 1.1);
+      this.collider.translate(result.normal.multiplyScalar(result.depth));
+    }
+  }
+  
 }
 
 export { FPVController };

@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import {Octree} from "./static/octree.js";
 
 
 class Engine {
@@ -13,6 +14,8 @@ class Engine {
     // this.testScene();
     
     this.enabled = false;
+    
+    this.octree = new Octree();
   }
   
   _update () {
@@ -44,7 +47,7 @@ class Engine {
     this.camera = new THREE.PerspectiveCamera(
       75,
       window.innerWidth / window.innerHeight,
-      0.1,
+      0.01,
       1000
     );
 
